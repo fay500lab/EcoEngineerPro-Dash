@@ -1,322 +1,311 @@
-import streamlit as st
-import pandas as pd
+import time
 import numpy as np
+import pandas as pd
+import streamlit as st
+import io
+from streamlit_lottie import st_lottie
+import requests
+import io
 import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import math
+
+# Fungsi untuk memuat animasi lottie dari URL
+def load_lottie_url(url):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+# Lottie animations
+lottie_beranda = load_lottie_url("https://lottie.host/947d937e-1b76-43a0-b786-d255c0ee1e74/stE5uwmVhW.json")
+lottie_lab = load_lottie_url("https://lottie.host/ad0ad4a2-3e19-4bc4-a8f8-6447dbc72c73/s5hNdaq1uX.json")
+lottie_simulasi = load_lottie_url("https://lottie.host/452e722c-e5f7-4a5a-bdaa-4f46c93a4ee6/FlkgyfRxKz.json")
+lottie_proses = load_lottie_url("https://lottie.host/83a75fcc-2836-4020-ba68-10b9e0f7aa75/RTuEA9yHNB.json")
+lottie_edukasi = load_lottie_url("https://lottie.host/30b3a6b0-a898-4862-a498-5600b93ee6a7/R9YyJLBYSA.json")
+lottie_laboratorium = load_lottie_url("https://lottie.host/512b24b7-72c0-4868-93cf-641162ab8ce5/y2TUFxINa1.json")
+lottie_interaktif = load_lottie_url("https://lottie.host/05ce74d8-a548-48b4-9dd0-04ec7c20bec1/gKJaJSYHw1.json")
+lottie_sidebar = load_lottie_url("https://lottie.host/46d5d5e6-71ac-47f0-b042-9d7bece4d120/KUFhym6hHY.json")
+lottie_tentang = load_lottie_url("https://lottie.host/2ca14505-599f-44fc-9516-fa2213084686/vW634tXhdC.json")
 
 # Konfigurasi halaman
-st.set_page_config(
-    page_title="EcoEngineer Pro-Dash",
-    page_icon="🌱",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Limbah Track", page_icon="♻️", layout="wide")
 
-# CSS styling
+# Sidebar
+with st.sidebar:
+    st_lottie(lottie_sidebar, speed=1, loop=True, quality="high", height=150)
+    st.title("♻️ Limbah Track")
+    st.markdown("Belajar & Simulasi Pengolahan Limbah Industri 🌍")
+    st.markdown("---")
+    menu = st.radio("Navigasi", ["🏠 Beranda", "⚙️ Proses", "🧪 Uji Lab", "🧩 Konsentrasi", "ℹ️ Tentang"])
+    st.markdown("---")
+    st.caption("© 2025 Kelompok 6 - 1F PLI AKA")
+
+# CSS tambahan buat mempercantik
 st.markdown("""
-<style>
-    .main-header {
-        font-size: 2.5rem;
-        color: #2E7D32;
+    <style>
+    .main-title {
+        font-size: 36px;
+        color: #2C3E50;
         text-align: center;
-        margin-bottom: 2rem;
+        padding: 20px 0;
+        animation: fadeIn 2s;
     }
-    .metric-card {
-        background-color: #E8F5E8;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 5px solid #4CAF50;
+    .stButton>button {
+        background-color: #2C3E50;
+        color: white;
     }
-    .status-pass {
-        color: #4CAF50;
-        font-weight: bold;
-        font-size: 1.2rem;
+    body {
+        background-color: #f5f9ff;
     }
-    .status-fail {
-        color: #F44336;
-        font-weight: bold;
-        font-size: 1.2rem;
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
-</style>
+    </style>
 """, unsafe_allow_html=True)
 
-# Data Baku Mutu PP No. 22 Tahun 2021 (Domestik)
-BAKU_MUTU = {
-    'BOD5': 30,      # mg/L
-    'COD': 100,      # mg/L
-    'TSS': 30,       # mg/L
-    'pH': (6, 9),    # rentang
-    'NH3-N': 5       # mg/L
-}
+# BERANDA
+if menu == "🏠 Beranda":
+    st_lottie(lottie_beranda, speed=1, loop=True, quality="high", height=350)
+    st.markdown("""
+        <style>
+        .hero {
+            background: linear-gradient(135deg, #d4edda, green);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeIn 2s;
+        }
+        </style>
+        <div class='hero'>
+            <h1>♻️ Manajemen & Edukasi Limbah Industri ♻️</h1>
+            <p>Belajar dan menghitung bagaimana pengolahan limbah industri secara baku mutu.</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-def calculate_unit_sizing(Q, td, surface_loading_rate=24):
-    """
-    Menghitung dimensi bak pengolahan
-    Q: debit (m³/hari)
-    td: waktu tinggal (jam)
-    surface_loading_rate: m³/m².hari (default 24 untuk bak aerasi)
-    """
-    # Volume bak (m³)
-    V = Q * td / 24
-    
-    # Luas permukaan (m²)
-    A = Q / surface_loading_rate
-    
-    # Dimensi (asumsi H = 3-4m untuk bak aerasi)
-    H = 3.5
-    L = math.sqrt(A * 3)  # Panjang 3x lebar
-    W = math.sqrt(A / 3)
-    
-    return {
-        'Volume': round(V, 2),
-        'Luas': round(A, 2),
-        'Panjang': round(L, 2),
-        'Lebar': round(W, 2),
-        'Tinggi': H
-    }
-
-def stoichiometry_coagulant(BOD_in, Q, coagulant_type='FeCl3'):
-    """
-    Menghitung kebutuhan koagulan
-    """
-    # Rasio mg koagulan / mg BOD (estimasi jar test)
-    ratios = {
-        'FeCl3': 8,    # mg/mg BOD
-        'Alum': 10,    # mg/mg BOD
-        'PAC': 6       # mg/mg BOD
-    }
-    
-    dosage = BOD_in * ratios.get(coagulant_type, 8) * Q / 1000  # kg/hari
-    return round(dosage, 2)
-
-def calculate_efficiency(influent, effluent):
-    """Menghitung efisiensi penyisihan (%)"""
-    return ((influent - effluent) / influent * 100) if influent > 0 else 0
-
-def check_regulation(effluent):
-    """Cek kepatuhan baku mutu"""
-    status = {}
-    for param, limit in BAKU_MUTU.items():
-        if param == 'pH':
-            status[param] = effluent[param] >= limit[0] and effluent[param] <= limit[1]
-        else:
-            status[param] = effluent[param] <= limit
-    return status
-
-# Header
-st.markdown('<h1 class="main-header">🌱 EcoEngineer Pro-Dash</h1>', unsafe_allow_html=True)
-st.markdown("**Dashboard Desain & Monitoring Instalasi Pengolahan Limbah**")
-
-# Sidebar untuk navigasi
-st.sidebar.title("📋 Menu")
-page = st.sidebar.selectbox("Pilih Fitur:", [
-    "🏗️ Unit Sizing", 
-    "🧪 Stoichiometry", 
-    "📊 Simulasi Real-time", 
-    "✅ Regulatory Checker"
-])
-
-# Halaman 1: Automatic Unit Sizing
-if page == "🏗️ Unit Sizing":
-    st.header("🏗️ Automatic Unit Sizing")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Input Data")
-        Q = st.number_input("**Debit (Q)** (m³/hari)", min_value=1.0, value=100.0, step=10.0)
-        td = st.number_input("**Waktu Tinggal (t_d)** (jam)", min_value=1.0, value=24.0, step=1.0)
-        SLR = st.number_input("**Surface Loading Rate** (m³/m².hari)", min_value=5.0, value=24.0, step=1.0)
-    
-    with col2:
-        if st.button("💾 Hitung Dimensi", type="primary"):
-            dimensions = calculate_unit_sizing(Q, td, SLR)
-            
-            st.subheader("📐 Hasil Dimensi Bak")
-            col_a, col_b, col_c = st.columns(3)
-            
-            with col_a:
-                st.metric("**Volume**", f"{dimensions['Volume']} m³")
-            with col_b:
-                st.metric("**Luas**", f"{dimensions['Luas']} m²")
-            with col_c:
-                st.metric("**P x L x T**", f"{dimensions['Panjang']} x {dimensions['Lebar']} x {dimensions['Tinggi']} m")
-            
-            # Gambar 3D sederhana
-            fig = go.Figure(data=[go.Mesh3d(
-                x=[0, dimensions['Panjang'], dimensions['Panjang'], 0,
-                   0, dimensions['Panjang'], dimensions['Panjang'], 0],
-                y=[0, 0, dimensions['Lebar'], dimensions['Lebar'],
-                   0, 0, dimensions['Lebar'], dimensions['Lebar']],
-                z=[0, 0, 0, 0, dimensions['Tinggi'], dimensions['Tinggi'], 
-                   dimensions['Tinggi'], dimensions['Tinggi']],
-                color='lightblue',
-                opacity=0.7
-            )])
-            fig.update_layout(title="Visualisasi 3D Bak", scene=dict(
-                xaxis_title='Panjang (m)',
-                yaxis_title='Lebar (m)',
-                zaxis_title='Tinggi (m)'
-            ))
-            st.plotly_chart(fig, use_container_width=True)
-
-# Halaman 2: Stoichiometry Calculator
-elif page == "🧪 Stoichiometry":
-    st.header("🧪 Stoichiometry Calculator")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Input Data")
-        BOD_in = st.number_input("**BOD Masuk** (mg/L)", min_value=0.0, value=200.0)
-        Q_stoich = st.number_input("**Debit** (m³/hari)", min_value=1.0, value=100.0)
-        coagulant = st.selectbox("**Jenis Koagulan**", ['FeCl3', 'Alum', 'PAC'])
-    
-    with col2:
-        dosage = stoichiometry_coagulant(BOD_in, Q_stoich, coagulant)
-        st.metric("**Kebutuhan Koagulan**", f"{dosage} kg/hari")
-        
-        st.info(f"**Rasio**: 1 mg {coagulant} per {8 if coagulant=='FeCl3' else 10 if coagulant=='Alum' else 6} mg BOD")
-    
-    # Tabel rekomendasi
-    st.subheader("📋 Rekomendasi Jar Test")
-    jar_data = {
-        'Koagulan': ['FeCl3', 'Alum', 'PAC'],
-        'Dosis Optimal': ['200-800 mg/L', '300-1000 mg/L', '150-600 mg/L'],
-        'pH Optimal': ['6.5-7.5', '6.0-7.5', '6.5-8.0']
-    }
-    st.table(pd.DataFrame(jar_data))
-
-# Halaman 3: Interactive Simulation
-elif page == "📊 Simulasi Real-time":
-    st.header("📊 Interactive Simulation")
-    
-    # Sliders untuk parameter
     col1, col2, col3 = st.columns(3)
-    
     with col1:
-        BOD_in_sim = st.slider("**BOD Masuk** (mg/L)", 50, 500, 200)
+        st_lottie(lottie_edukasi, speed=1, loop=True, quality="high", height=150)
+        st.markdown("### Edukasi Proses")
+        st.write("Kenali tahapan proses pemisahan pengolahan limbah dari awal.")
     with col2:
-        Q_sim = st.slider("**Debit** (m³/hari)", 50, 500, 100)
+        st_lottie(lottie_laboratorium, speed=1, loop=True, quality="high", height=150)
+        st.markdown("### Uji Laboratorium")
+        st.write("Hitung nilai COD, BOD, TSS, dan pH dari data sampel.")
     with col3:
-        efficiency = st.slider("**Efisiensi (%)**", 50.0, 95.0, 85.0, 0.5)
-    
-    # Hitung output
-    BOD_out_sim = BOD_in_sim * (1 - efficiency/100)
-    
-    # Grafik real-time
-    fig = make_subplots(rows=2, cols=2,
-                       subplot_titles=('Efisiensi Penyisihan', 'Konsentrasi BOD', 
-                                    'Dimensi vs Debit', 'Regulatory Status'),
-                       specs=[[{"secondary_y": False}, {"secondary_y": False}],
-                              [{"secondary_y": False}, {"secondary_y": False}]])
-    
-    # Plot 1: Efisiensi
-    fig.add_trace(go.Scatter(x=[50,100,200,300,400,500], 
-                           y=[95,90,85,80,75,70],
-                           mode='lines+markers',
-                           name='Efisiensi'), row=1, col=1)
-    
-    # Plot 2: BOD in/out
-    fig.add_trace(go.Bar(x=['Masuk', 'Keluar'], y=[BOD_in_sim, BOD_out_sim],
-                marker_color=['#FF6384', '#36A2EB']), row=1, col=2)
-    
-    # Plot 3: Dimensi vs Debit
-    dims = calculate_unit_sizing(Q_sim, 24)
-    fig.add_trace(go.Scatter(x=[50,100,200,300,400,500],
-                           y=[calculate_unit_sizing(q,24)['Volume'] for q in [50,100,200,300,400,500]],
-                           mode='lines', name='Volume'), row=2, col=1)
-    
-    # Plot 4: Regulatory
-    status_color = 'green' if BOD_out_sim <= BAKU_MUTU['BOD5'] else 'red'
-    fig.add_trace(go.Indicator(
-        mode="gauge+number+delta",
-        value=BOD_out_sim,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "BOD (mg/L)"},
-        delta={'reference': BAKU_MUTU['BOD5']},
-        gauge={
-            'axis': {'range': [None, 100]},
-            'bar': {'color': status_color},
-            'steps': [
-                {'range': [0, 30], 'color': 'green'},
-                {'range': [30, 100], 'color': 'red'}],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': BAKU_MUTU['BOD5']}
-        }), row=2, col=2)
-    
-    st.plotly_chart(fig, use_container_width=True)
+        st_lottie(lottie_interaktif, speed=1, loop=True, quality="high", height=150)
+        st.markdown("### perhitungan simulasi")
+        st.write("Lakukan perhitungan kadar limbah yang bisa dibuang sesuai baku mutu.")
 
-# Halaman 4: Regulatory Checker
-elif page == "✅ Regulatory Checker":
-    st.header("✅ Regulatory Checker")
-    st.markdown("**PP No. 22 Tahun 2021 - Baku Mutu Domestik**")
-    
-    # Input data effluent
-    st.subheader("📥 Input Data Effluent")
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        BOD_eff = st.number_input("**BOD5** (mg/L)", 0.0, 200.0, 25.0)
-    with col2:
-        COD_eff = st.number_input("**COD** (mg/L)", 0.0, 500.0, 80.0)
-    with col3:
-        TSS_eff = st.number_input("**TSS** (mg/L)", 0.0, 200.0, 20.0)
-    with col4:
-        pH_eff = st.number_input("**pH**", 4.0, 12.0, 7.0)
-    
-    if st.button("🔍 Cek Kepatuhan", type="primary"):
-        effluent_data = {'BOD5': BOD_eff, 'COD': COD_eff, 'TSS': TSS_eff, 'pH': pH_eff}
-        status = check_regulation(effluent_data)
-        
-        # Status keseluruhan
-        overall_status = all(status.values())
-        status_class = "status-pass" if overall_status else "status-fail"
-        status_text = "✅ LULUS" if overall_status else "❌ GAGAL"
-        
-        st.markdown(f'<div class="metric-card"><h3>Status Keseluruhan: <span class="{status_class}">{status_text}</span></h3></div>', 
-                   unsafe_allow_html=True)
-        
-        # Tabel detail
-        results_df = pd.DataFrame({
-            'Parameter': list(status.keys()),
-            'Hasil (mg/L)': [effluent_data[k] if k != 'pH' else f"{effluent_data[k]:.1f}" for k in status.keys()],
-            'Baku Mutu': [f"{BAKU_MUTU[k]}" if k != 'pH' else f"{BAKU_MUTU[k][0]}-{BAKU_MUTU[k][1]}" for k in status.keys()],
-            'Status': ['✅ Lulus' if status[k] else '❌ Gagal' for k in status.keys()]
-        })
-        
-        st.table(results_df)
-        
-        # Gauge charts
-        fig = make_subplots(rows=1, cols=3, 
-                           subplot_titles=('BOD5', 'COD', 'TSS'),
-                           specs=[[{"secondary_y": False}, {"secondary_y": False}, {"secondary_y": False}]])
-        
-        params = ['BOD5', 'COD', 'TSS']
-        values = [BOD_eff, COD_eff, TSS_eff]
-        limits = [BAKU_MUTU[p] for p in params]
-        
-        for i, (param, val, limit) in enumerate(zip(params, values, limits)):
-            color = 'green' if val <= limit else 'red'
-            fig.add_trace(go.Indicator(
-                mode="gauge+number",
-                value=val,
-                domain={'x': [i*0.33, (i+1)*0.33], 'y': [0, 1]},
-                title={'text': param},
-                gauge={
-                    'axis': {'range': [0, max(limit*1.5, 100)]},
-                    'bar': {'color': color},
-                    'steps': [{'range': [0, limit], 'color': 'green'}, 
-                             {'range': [limit, max(limit*1.5, 100)], 'color': 'red'}],
-                    'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': limit}
-                }), row=1, col=i+1)
-        
-        st.plotly_chart(fig, use_container_width=True)
+# PROSES
+elif menu == "⚙️ Proses":
+    st_lottie(lottie_proses, speed=1, loop=True, quality="high", height=200)
+    st.markdown('<div class="main-title">⚙️ Tahapan Pengolahan Limbah Industri</div>', unsafe_allow_html=True)
+    st.markdown("""
+    ### 🧹 1. Pra-Pengolahan (Pre-Treatment)
+    - Screening: Menyaring benda kasar seperti plastik dan kayu.
+    - Grit Chamber: Mengendapkan partikel berat seperti pasir.
+    - Equalization Tank: Menyeimbangkan aliran dan beban limbah.
 
-# Footer
-st.markdown("---")
-st.markdown("**© 2024 EcoEngineer Pro-Dash | Dibuat dengan ❤️ untuk Industri Lingkungan**")
+    ### 🧪 2. Pengolahan Primer
+    - Primary Clarifier: Mengendapkan padatan tersuspensi.
+
+    ### 🧬 3. Pengolahan Sekunder (Biologis)
+    - Aerob: Dengan oksigen (activated sludge, trickling filter).
+    - Anaerob: Tanpa oksigen untuk limbah berat.
+
+    ### 🧼 4. Pengolahan Tersier
+    - Filtrasi, Reverse Osmosis, Proses Kimia.
+
+    ### 🧱 5. Pengolahan Lumpur
+    - Thickening, Digestion, Dewatering.
+
+    ### 🌊 6. Pembuangan Akhir
+    - Limbah cair buangan yang memenuhi standar.
+    """)
+# UJI LAB
+elif menu == "🧪 Uji Lab":
+    st_lottie(lottie_lab, speed=1, loop=True, quality="high", height=200)
+    st.markdown('<div class="main-title">🧪 Kalkulator Uji Laboratorium</div>', unsafe_allow_html=True)
+    uji = st.selectbox("Pilih jenis uji:", ["COD", "BOD", "TSS", "pH"])
+
+    if uji == "COD":
+        st.markdown("### Rumus Umum COD:")
+        st.latex(r'''
+            \text{COD (mg/L)} = \frac{(V_b - V_s) \times N \times 8000}{V_{\text{sampel}}}
+            ''')
+
+        st.markdown("""
+            Keterangan:  
+            - \( V_b \): Volume titran untuk blanko (mL)  
+            - \( V_s \): Volume titran untuk sampel (mL)  
+            - \( N \): Normalitas (N)  
+            - \( V_{\text{sampel}} \): Volume sampel (mL)  
+            """)
+             
+                 
+        v = st.number_input("Volume titran (mL)", value=10.0)
+        n = st.number_input("Normalitas titran (N)", value=0.25)
+        vs = st.number_input("Volume sampel (mL)", value=50.0)
+        if st.button("Hitung COD"):
+            hasil = (v * n * 8000) / vs
+            st.success(f"COD = {hasil:.2f} mg/L")
+
+            fig = go.Figure(data=[go.Pie(
+                labels=["COD", "Sisa"],
+                values=[hasil, max(1000 - hasil, 0)],
+                hole=0.5,
+                marker_colors=["#2C3E50", "#95a5a6"]
+            )])
+            fig.update_layout(width=400, height=300)
+            st.plotly_chart(fig)
+
+            buffer = io.StringIO()
+            buffer.write(f"Hasil Uji COD\nVolume titran: {v} mL\nNormalitas: {n} N\nVolume sampel: {vs} mL\n=> COD = {hasil:.2f} mg/L")
+            st.download_button("📄 Unduh Hasil", buffer.getvalue(), file_name="hasil_uji_cod.txt")
+
+    elif uji == "BOD":
+        st.markdown("### Rumus Umum BOD:")
+        st.latex(r'''
+            \text{BOD (mg/L)} = D_1 - D_2
+            ''')
+
+        st.markdown("""
+            Keterangan:  
+            - \( D_1 \): Konsentrasi DO awal (sebelum inkubasi)  
+            - \( D_2 \): Konsentrasi DO akhir (setelah inkubasi 5 hari)  
+            """)
+        
+        awal = st.number_input("DO Awal (mg/L)", value=8.0)
+        akhir = st.number_input("DO Akhir (mg/L)", value=2.0)
+        if st.button("Hitung BOD"):
+            hasil = awal - akhir
+            st.success(f"BOD = {hasil:.2f} mg/L")
+
+            fig = go.Figure(data=[go.Pie(
+                labels=["Terpakai (BOD)", "Tersisa (Oksigen)"],
+                values=[hasil, akhir],
+                hole=0.5,
+                marker_colors=["#3498db", "#ecf0f1"]
+            )])
+            fig.update_layout(width=400, height=300)
+            st.plotly_chart(fig)
+
+            buffer = io.StringIO()
+            buffer.write(f"Hasil Uji BOD\nDO Awal: {awal} mg/L\nDO Akhir: {akhir} mg/L\n=> BOD = {hasil:.2f} mg/L")
+            st.download_button("📄 Unduh Hasil", buffer.getvalue(), file_name="hasil_uji_bod.txt")
+
+    elif uji == "TSS":
+        st.markdown("### Rumus TSS:")
+        st.latex(r'''
+        \text{TSS (mg/L)} = \frac{(W_2 - W_1) \times 1000}{V}
+        ''')
+
+        st.markdown("""
+            Keterangan:  
+            - \( W_1 \): Berat kertas saring kosong (gram)  
+            - \( W_2 \): Berat kertas saring + padatan (gram)  
+            - \( V \): Volume sampel air (mL)  
+            """)
+        awal = st.number_input("Berat filter awal (mg)", value=100.0)
+        akhir = st.number_input("Berat filter akhir (mg)", value=120.0)
+        volume = st.number_input("Volume sampel (L)", value=1.0)
+        if st.button("Hitung TSS"):
+            hasil = (akhir - awal) / volume
+            st.success(f"TSS = {hasil:.2f} mg/L")
+
+            fig = go.Figure(data=[go.Pie(
+                labels=["Padatan Tersuspensi", "Lainnya"],
+                values=[hasil, max(100 - hasil, 0)],
+                hole=0.5,
+                marker_colors=["#9b59b6", "#dcdde1"]
+            )])
+            fig.update_layout(width=400, height=300)
+            st.plotly_chart(fig)
+
+            buffer = io.StringIO()
+            buffer.write(f"Hasil Uji TSS\nBerat awal: {awal} mg\nBerat akhir: {akhir} mg\nVolume: {volume} L\n=> TSS = {hasil:.2f} mg/L")
+            st.download_button("📄 Unduh Hasil", buffer.getvalue(), file_name="hasil_uji_tss.txt")
+
+    elif uji == "pH":
+        ph = st.slider("pH sampel", 0.0, 14.0, 7.0)
+        st.info(f"pH = {ph}")
+        warna = "#2ecc71" if 6.5 <= ph <= 8.5 else "#e74c3c"
+        fig = go.Figure(data=[go.Pie(
+            labels=["pH", "Selisih dari Netral"],
+            values=[ph, 14 - ph],
+            hole=0.5,
+            marker_colors=[warna, "#ecf0f1"]
+        )])
+        fig.update_layout(width=400, height=300)
+        st.plotly_chart(fig)
+
+# SIMULASI
+elif menu == "🧩 Konsentrasi":
+    st_lottie(lottie_simulasi, speed=1, loop=True, quality="high", height=200)
+    st.markdown('<div class="main-title">🧩 Perhitungan konsentrasi Limbah</div>', unsafe_allow_html=True)
+
+    st.markdown("### Rumus Pengurangan Konsentrasi Limbah:")
+    st.latex(r'''
+    C_{\text{akhir}} = C_{\text{awal}} \times (1 - \text{efisiensi})
+    ''')
+    st.markdown("""
+    **Keterangan:**  
+    - \( C_awal \): Konsentrasi awal limbah (mg/L)  
+    - \( efisiensi \): Efisiensi pengolahan limbah (%)  
+    - \( C_akhir \): Konsentrasi limbah setelah pengolahan (mg/L)  
+    """)
+    
+    jenis = st.selectbox("Jenis limbah", ["Organik", "Kimia", "Campuran"])
+    awal = st.number_input("Konsentrasi awal (mg/L)", value=500.0)
+
+    efisiensi = {"Organik": 0.85, "Kimia": 0.70, "Campuran": 0.60}[jenis]
+    if st.button("Mulai Simulasi"):
+        akhir = awal * (1 - efisiensi)
+        st.success(f"Hasil akhir: {akhir:.2f} mg/L ({efisiensi*100:.0f}% efisiensi)")
+
+        fig = go.Figure(data=[go.Pie(
+            labels=["Terolah", "Tersisa"],
+            values=[awal - akhir, akhir],
+            hole=0.5,
+            marker_colors=["#27ae60", "#e74c3c"]
+        )])
+        fig.update_layout(width=400, height=300)
+        st.plotly_chart(fig)
+
+        buffer = io.StringIO()
+        buffer.write(f"Simulasi Pengolahan Limbah\nJenis: {jenis}\nKonsentrasi awal: {awal} mg/L\nEfisiensi: {efisiensi*100:.0f}%\n=> Hasil akhir: {akhir:.2f} mg/L")
+        st.download_button("📄 Unduh Hasil", buffer.getvalue(), file_name="hasil_simulasi.txt")
+    st.write("untuk efesiensi yaitu kimia 80%, organik 70% dan campuran 60% sesuai baku mutu PERMENLHK No. 5 Tahun 2014")
+        
+# TENTANG
+elif menu == "ℹ️ Tentang":
+    st_lottie(lottie_tentang, speed=1, loop=True, quality="high", height=150)
+    st.markdown('<div class="main-title">ℹ️ Tentang Aplikasi Ini</div>', unsafe_allow_html=True)
+    st.write("""
+    **Limbah Track** adalah aplikasi edukatif interaktif yang dirancang untuk membantu pengguna memahami proses dan perhitungan pengolahan limbah industri cair.
+
+    Aplikasi ini menampilkan simulasi pengolahan, uji laboratorium, serta perhitungan parameter kualitas air limbah seperti:
+    
+    - **COD** (Chemical Oxygen Demand)
+    - **BOD** (Biochemical Oxygen Demand)
+    - **TSS** (Total Suspended Solid)
+    - **pH** (derajat keasaman)
+
+    ### 🎯 Tujuan:
+    Membantu memahami batas baku mutu dan pentingnya pengolahan limbah cair industri agar tidak mencemari lingkungan.
+
+    ### 📚 Referensi:
+    - Modul Teknik Lingkungan
+    - Litbang KLHK
+    - **PERMENLHK No. 5 Tahun 2014** tentang Baku Mutu Air Limbah
+
+    ### 👨‍💻 Teknologi:
+    - Python + Streamlit
+    - Visualisasi interaktif (Plotly, Lottie)
+
+    ### 👥 Pengembang:
+    - Kelompok 6 – 1F PLI AKA
+    - Versi: 1.1 (2025)
+    """)
