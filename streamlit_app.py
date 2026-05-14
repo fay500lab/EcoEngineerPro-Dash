@@ -221,7 +221,7 @@ elif page == "📊 Simulasi Real-time":
     
     # Plot 2: BOD in/out
     fig.add_trace(go.Bar(x=['Masuk', 'Keluar'], y=[BOD_in_sim, BOD_out_sim],
-                        marker_color=['#FF6384', '#36A2EB']), row=1, col=2)
+                marker_color=['#FF6384', '#36A2EB']), row=1, col=2)
     
     # Plot 3: Dimensi vs Debit
     dims = calculate_unit_sizing(Q_sim, 24)
